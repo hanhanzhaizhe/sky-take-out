@@ -12,13 +12,42 @@ spring:
       url: jdbc:mysql://${sky.datasource.host}:${sky.datasource.port}/${sky.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${sky.datasource.username}
       password: ${sky.datasource.password}
+      # 🔑 核心优化：连接保活与检测（解决discard警告）
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      time-between-eviction-runs-millis: 30000  # 30秒检测空闲连接
+      min-evictable-idle-time-millis: 1800000   # 30分钟空闲回收
+      max-evictable-idle-time-millis: 3600000   # 60分钟强制回收
+      keep-alive: true                          # 启用保活
+      keep-alive-between-time-millis: 120000    # 2分钟发送心跳包
+
+      # 💡 连接池容量（根据服务器配置调整）
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000  # 获取连接超时时间(60秒)
+
+      # 🛡️ 防御性配置
+      remove-abandoned: true
+      remove-abandoned-timeout: 1800  # 30分钟未归还强制回收
+      log-abandoned: true             # 记录回收日志
+
+      # 📊 监控配置（可选但推荐）
+      stat-view-servlet:
+        enabled: true
+        login-username: admin
+        login-password: admin123
+      web-stat-filter:
+        enabled: true
 
 mybatis:
-  #mapper配置文件
+
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.sky.entity
   configuration:
-    #开启驼峰命名
+
     map-underscore-to-camel-case: true
 
 logging:
@@ -31,9 +60,9 @@ logging:
 
 sky:
   jwt:
-    # 设置jwt签名加密时使用的秘钥
+
     admin-secret-key: itcast
-    # 设置jwt过期时间
+
     admin-ttl: 7200000
-    # 设置前端传递过来的令牌名称
+
     admin-token-name: token
